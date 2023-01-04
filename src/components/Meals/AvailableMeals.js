@@ -7,11 +7,16 @@ import {useEffect, useState} from "react";
 const AvailableMeals = () => {
 
     const [meals, setMeals] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [httpError, setHttpError] = useState();
 
     useEffect(() => {
-
+        setIsLoading(true);
         const fetchMeals = async () => {
             const response = await fetch('https://react-food-app-db-84d0b-default-rtdb.europe-west1.firebasedatabase.app/meals.json');
+            if (!response.ok) {
+                throw new Error('Error')
+            }
             const responseData = await response.json();
             // console.log(responseData);
             const loadedMeals = [];
@@ -27,8 +32,30 @@ const AvailableMeals = () => {
             // console.log(loadedMeals)
             setMeals(loadedMeals);
         }
-        fetchMeals();
+
+        fetchMeals().then(() => {
+            // console.log('All is OK');
+            setIsLoading(false);
+        }).catch((error) => {
+            setIsLoading(false);
+            setHttpError(error.message)
+            // console.log(error)
+        })
+
     }, [])
+
+    if (isLoading){
+        return <section className={styles.mealsLoading}>
+            <p>Data is loading...</p>
+        </section>
+    }
+
+    if (httpError){
+        return <section className={styles.error}>
+            <p>Failed to load data.</p>
+            <p>{httpError}</p>
+        </section>
+    }
 
     const mealsList = meals.map(meal => (
         <MealItem
@@ -44,7 +71,6 @@ const AvailableMeals = () => {
         <Card>
             <ul>
                 {mealsList}
-                {mealsList.length === 0 && <p>No meals</p>}
             </ul>
         </Card>
     </section>

@@ -8,6 +8,8 @@ import Checkout from "./Checkout";
 const Cart = (props) => {
 
     const [isCheckout, setIsCheckout] = useState(false);
+    const [isSendingData, setIsSendingData] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
     const cartCtx = useContext(CartContext);
 
     const totalAmount = `$${cartCtx.totalAmount.toFixed(2)}`;
@@ -25,12 +27,14 @@ const Cart = (props) => {
         setIsCheckout(true);
     }
 
-    const cancelHandler = () => {
-        setIsCheckout(false);
+    const submittedDataCloseModalHandler = () => {
+        props.onHideCart();
+        setIsSubmitted(false);
     }
 
     const sendDataToServer = (userData) => {
-        console.log(userData);
+        // console.log(userData);
+        setIsSendingData(true);
         fetch('https://react-food-app-db-84d0b-default-rtdb.europe-west1.firebasedatabase.app/orders.json',{
             method: 'POST',
             body: JSON.stringify({
@@ -38,8 +42,9 @@ const Cart = (props) => {
                 orderedItems: cartCtx.items
             })
         }).then(() => {
+            setIsSendingData(false);
+            setIsSubmitted(true);
             cartCtx.clearCart();
-            props.onHideCart();
         }).catch((error) => {
             console.log(error)
         })
@@ -65,7 +70,7 @@ const Cart = (props) => {
         {hasOrderedItems && <button className={styles.button} onClick={orderHandler}>Order</button>}
     </div>;
 
-    return <Modal onHideCart={props.onHideCart}>
+    const cartModalContent = <>
         {cartItems}
         <div className={styles.total}>
             <span>Total Amount</span>
@@ -74,6 +79,19 @@ const Cart = (props) => {
         {/*{isCheckout && <Checkout onCancel={cancelHandler}/>}*/}
         {isCheckout && <Checkout onConfirm={sendDataToServer} onCancel={props.onHideCart}/>}
         {!isCheckout && modalButtons}
+    </>;
+
+    const isSendingDataModalContent = <p>Sending data to server...</p>;
+
+    const didSendingDataModalContent = <div className={styles.actions}>
+        <p>Successfully sent data to server...</p>
+        <button className={styles.button} onClick={submittedDataCloseModalHandler}>Close</button>
+    </div>;
+
+    return <Modal onHideCart={props.onHideCart}>
+        {!isSendingData && !isSubmitted && cartModalContent}
+        {isSendingData && isSendingDataModalContent}
+        {!isSendingData && isSubmitted && didSendingDataModalContent}
     </Modal>
 }
 

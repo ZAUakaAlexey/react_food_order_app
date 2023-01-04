@@ -8,7 +8,7 @@ const MealItem = ({id, name, description, price}) => {
     const cartCtx = useContext(CartContext)
 
     const addItemToCartHandler = amount => {
-        console.log(amount)
+        // console.log(amount)
         cartCtx.addItem({
             id: id,
             name: name,
